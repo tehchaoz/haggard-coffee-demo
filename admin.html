@@ -1,0 +1,132 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="robots" content="noindex,nofollow"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Admin | Haggard Coffee</title><meta name="robots" content="noindex,nofollow">
+<meta name="theme-color" content="#0b0b0a"><link rel="icon" href="img/wolf.png">
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fjalla+One&family=Montserrat:wght@400;500;700;800&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="css/style.css?v=5"><link rel="stylesheet" href="css/shop.css?v=5"><link rel="stylesheet" href="css/admin.css?v=5">
+<style>body::after{display:none}</style></head>
+<body class="admin">
+<div id="login" class="login" hidden>
+  <form id="loginform" class="login-box" autocomplete="off">
+    <img src="img/logo.png" alt="Haggard" width="150" height="53">
+    <p class="eyebrow" id="loginkicker">Owner login</p>
+    <label class="fld">Password<input type="password" id="pw" required autocomplete="current-password" minlength="1"></label>
+    <label class="fld" id="pw2wrap" hidden>Confirm password<input type="password" id="pw2" autocomplete="new-password"></label>
+    <p class="form-msg err" id="loginmsg" role="alert"></p>
+    <button class="btn block" type="submit" id="loginbtn">Log in</button>
+    <p class="fine" id="loginhint">Demo login. This only guards the screen in this browser.</p>
+    <p class="fine"><a href="index.html">← Back to the site</a></p>
+  </form>
+</div>
+
+<div id="app" hidden>
+  <header class="a-top">
+    <a class="a-brand" href="index.html" title="View site"><img src="img/logo.png" alt="Haggard" width="100" height="35"><span>Admin</span></a>
+    <nav class="a-tabs" role="tablist" aria-label="Admin sections">
+      <button role="tab" data-tab="products" class="on">Products</button>
+      <button role="tab" data-tab="orders">Orders <i id="newcount" hidden></i></button>
+      <button role="tab" data-tab="reports">Reports</button>
+      <button role="tab" data-tab="settings">Settings</button>
+      <button role="tab" data-tab="data">Data</button>
+    </nav>
+    <div class="a-right"><a class="btn ghost mini" href="index.html" target="_blank" rel="noopener">View site ↗</a><button class="btn ghost mini" id="logout" type="button">Log out</button></div>
+  </header>
+
+  <main class="a-main">
+    <section id="tab-products" class="a-pane">
+      <div class="stats" id="stats"></div>
+      <div class="a-bar">
+        <input type="search" id="q" placeholder="Search products…" aria-label="Search products">
+        <select id="cat" aria-label="Filter category"><option value="">All</option><option value="coffee">Coffee</option><option value="merch">Merch</option></select>
+        <button class="btn" id="addbtn" type="button">+ Add product</button>
+      </div>
+      <div id="plist" class="plist"></div>
+      <p class="fine">Tip: change a price or stock count right in the list and it saves automatically.</p>
+    </section>
+
+    <section id="tab-orders" class="a-pane" hidden>
+      <div class="a-bar"><h2>Orders</h2><button class="btn ghost mini" id="csv" type="button">Export CSV</button></div>
+      <div id="olist"></div>
+    </section>
+
+    <section id="tab-reports" class="a-pane" hidden>
+      <div class="a-bar"><h2>Reports</h2>
+        <select id="range" aria-label="Date range"><option value="7">Last 7 days</option><option value="30" selected>Last 30 days</option><option value="90">Last 90 days</option><option value="0">All time</option></select>
+        <button class="btn ghost mini" id="repcsv" type="button">Export product sales CSV</button></div>
+      <div id="repbody"></div>
+    </section>
+
+    <section id="tab-settings" class="a-pane" hidden>
+      <h2>Settings</h2>
+      <form id="setform" class="form set">
+        <div class="two"><label>Shipping flat rate ($)<input type="number" step="0.01" min="0" name="shipFlat"></label><label>Free shipping over ($, 0 = never)<input type="number" step="0.01" min="0" name="freeOver"></label></div>
+        <label>Sales tax rate (%) <small>Estimate shown at checkout. Confirm your rate with your accountant.</small><input type="number" step="0.01" min="0" max="20" name="taxRate"></label>
+        <label class="chk"><input type="checkbox" name="pickup"> Offer local pickup in Brooksville</label>
+        <label>Pickup note<input name="pickupNote"></label>
+        <div><button class="btn" type="submit">Save settings</button></div>
+      </form>
+      <h2 style="margin-top:44px">Change password</h2>
+      <form id="pwform" class="form set">
+        <label>New password<input type="password" name="np" minlength="6" required autocomplete="new-password"></label>
+        <label>Confirm<input type="password" name="np2" minlength="6" required autocomplete="new-password"></label>
+        <div><button class="btn ghost" type="submit">Update password</button></div>
+      </form>
+    </section>
+
+    <section id="tab-data" class="a-pane" hidden>
+      <h2>Data &amp; backup</h2>
+      <div class="notice"><b>How saving works in this demo.</b> Products, photos, orders and settings are saved inside <em>this browser</em>. Visitors on other devices will not see your edits until the store is connected to a real database or Shopify. Export a backup regularly.</div>
+      <div class="meter"><span id="usage"></span><div class="bar"><i id="usagebar"></i></div></div>
+      <div class="data-actions">
+        <button class="btn" id="export" type="button">Download backup (.json)</button>
+        <label class="btn ghost" for="import" style="cursor:pointer">Restore from backup<input type="file" id="import" accept="application/json,.json" hidden></label>
+        <button class="btn ghost danger" id="reset" type="button">Reset catalog to defaults</button>
+      </div>
+      <p class="form-msg" id="datamsg" role="status"></p>
+    </section>
+  </main>
+
+  <dialog id="editor" class="editor" aria-labelledby="edtitle">
+    <form id="edform" method="dialog">
+      <div class="ed-head"><h2 id="edtitle">Add product</h2><button type="button" class="drawer-x" id="edclose" aria-label="Close">×</button></div>
+      <div class="ed-body">
+        <div class="ed-cols">
+          <div>
+            <label class="fld">Name<input name="name" required maxlength="80"></label>
+            <div class="two">
+              <label class="fld">Category<select name="category"><option value="coffee">Coffee</option><option value="merch">Merch</option></select></label>
+              <label class="fld">Subtitle <small>(e.g. 12 oz bag)</small><input name="meta" maxlength="40"></label>
+            </div>
+            <div class="three eq">
+              <label class="fld">Price ($)<input name="price" type="number" step="0.01" min="0" required></label>
+              <label class="fld">Compare-at <small>(was)</small><input name="compareAt" type="number" step="0.01" min="0"></label>
+              <label class="fld">In stock<input name="stock" type="number" step="1" min="0" required></label>
+            </div>
+            <label class="fld">Description<textarea name="desc" rows="4"></textarea></label>
+            <div class="two">
+              <label class="fld">Option label <small>(Size, Grind…)</small><input name="optionLabel" maxlength="20" placeholder="Size"></label>
+              <label class="fld">Options <small>(comma separated)</small><input name="options" placeholder="S, M, L, XL"></label>
+            </div>
+            <label class="fld">Badge <small>(optional ribbon, e.g. New)</small><input name="badge" maxlength="24"></label>
+            <div class="checks"><label class="chk"><input type="checkbox" name="published"> Show in shop</label><label class="chk"><input type="checkbox" name="featured"> Feature on home page</label></div>
+          </div>
+          <div>
+            <p class="fldlabel">Photos <small>First photo is the main image</small></p>
+            <div id="drop" class="drop" tabindex="0" role="button" aria-label="Add photos">
+              <input type="file" id="files" accept="image/*" multiple hidden>
+              <b>Drop photos here</b><span>or click to choose · JPG, PNG, WebP</span>
+            </div>
+            <div id="photos" class="photos"></div>
+            <div class="urlrow"><input type="url" id="urlin" placeholder="…or paste an image URL"><button type="button" class="btn ghost mini" id="urladd">Add</button></div>
+            <p class="fine" id="photonote">Photos are resized to 1200px and compressed automatically.</p>
+          </div>
+        </div>
+      </div>
+      <div class="ed-foot"><p class="form-msg err" id="edmsg" role="alert"></p><button type="button" class="btn ghost" id="edcancel">Cancel</button><button type="submit" class="btn" id="edsave">Save product</button></div>
+    </form>
+  </dialog>
+  <div id="toast" class="toast" role="status" aria-live="polite"></div>
+</div>
+<script src="js/store.js?v=5"></script><script src="js/admin.js?v=6"></script>
+</body></html>
