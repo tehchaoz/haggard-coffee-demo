@@ -67,8 +67,79 @@
       });
     }
   }
-  function openCart(){d.body.classList.add('cart-open');var x=$('.drawer-x');x&&x.focus()}
-  function closeCart(){d.body.classList.remove('cart-open')}
+  /* Cart drawer motion: a spring that starts from the live on-screen position,
+     inherits finger velocity, projects momentum on release, and can be grabbed mid-flight. */
+  var sp={x:0,v:0,t:0,W:440,raf:0,from:null,reduce:matchMedia('(prefers-reduced-motion: reduce)').matches};
+  function paint(){
+    var dr=$('#cart'),ov=$('#cartov');if(!dr)return;
+    var vis=sp.x<sp.W-.5;
+    dr.style.transform='translate3d('+sp.x+'px,0,0)';
+    ov.style.opacity=Math.max(0,Math.min(1,1-sp.x/sp.W));
+    dr.style.visibility=ov.style.visibility=vis?'visible':'hidden';
+  }
+  function stopSpring(){cancelAnimationFrame(sp.raf);sp.raf=0}
+  function settled(){
+    if(sp.x>=sp.W-.5){
+      d.body.classList.remove('cart-open');
+      if(sp.from&&sp.from.focus){try{sp.from.focus({preventScroll:true})}catch(e){}}sp.from=null;
+    }
+  }
+  // response = seconds to reach the target; zeta = damping ratio (1 = no overshoot)
+  function springTo(target,v0,response,zeta){
+    stopSpring();sp.t=target;sp.v=v0||0;
+    if(sp.reduce){sp.x=target;sp.v=0;paint();settled();return}
+    var w=2*Math.PI/response,k=w*w,c=2*zeta*w,last=performance.now();
+    (function tick(now){
+      var dt=Math.min(.05,(now-last)/1000);last=now;
+      var n=Math.max(1,Math.ceil(dt/.004)),h=dt/n;
+      for(var i=0;i<n;i++){sp.v+=(-k*(sp.x-sp.t)-c*sp.v)*h;sp.x+=sp.v*h}
+      if(Math.abs(sp.x-sp.t)<.4&&Math.abs(sp.v)<8){sp.x=sp.t;sp.v=0;paint();sp.raf=0;settled();return}
+      paint();sp.raf=requestAnimationFrame(tick);
+    })(last);
+  }
+  function openCart(){
+    var dr=$('#cart');if(!dr)return;
+    if(!d.body.classList.contains('cart-open')){sp.from=d.activeElement;sp.W=dr.offsetWidth||440;d.body.classList.add('cart-open')}
+    springTo(0,sp.v,.4,1);
+    var x=$('.drawer-x');x&&x.focus({preventScroll:true});
+  }
+  function closeCart(){if(d.body.classList.contains('cart-open'))springTo(sp.W,sp.v,.38,1)}
+  // rubber band: resistance grows the further past the edge you drag
+  function rubber(o,dim){var c=.55;return (o*dim*c)/(dim+c*Math.abs(o))}
+  function initDrawer(){
+    var dr=$('#cart');if(!dr)return;
+    sp.W=dr.offsetWidth||440;sp.x=sp.W;paint();
+    addEventListener('resize',function(){var o=sp.W;sp.W=dr.offsetWidth||440;if(sp.x>=o-.5)sp.x=sp.W;paint()});
+    var st=null;
+    dr.addEventListener('pointerdown',function(e){
+      if(e.button>0)return;
+      st={id:e.pointerId,x0:e.clientX,y0:e.clientY,base:sp.x,mode:'wait',hist:[[e.timeStamp,e.clientX]]};
+      if(sp.raf){stopSpring();st.mode='drag';try{dr.setPointerCapture(e.pointerId)}catch(x){}d.body.classList.add('dragging')} // grabbed mid-flight: take over from the live position
+    });
+    dr.addEventListener('pointermove',function(e){
+      if(!st||e.pointerId!==st.id)return;
+      st.hist.push([e.timeStamp,e.clientX]);while(st.hist.length>2&&e.timeStamp-st.hist[0][0]>100)st.hist.shift();
+      var dx=e.clientX-st.x0,dy=e.clientY-st.y0;
+      if(st.mode==='wait'){
+        if(Math.abs(dx)<10&&Math.abs(dy)<10)return;            // hysteresis before choosing a direction
+        if(Math.abs(dx)>Math.abs(dy)){st.mode='drag';try{dr.setPointerCapture(e.pointerId)}catch(x){}d.body.classList.add('dragging')}
+        else{st=null;return}                                     // vertical: let the cart list scroll
+      }
+      var nx=st.base+dx;sp.x=nx<0?-rubber(-nx,sp.W):nx;paint();  // 1:1 with the pointer
+    });
+    function release(e){
+      if(!st||e.pointerId!==st.id)return;
+      var s=st;st=null;d.body.classList.remove('dragging');
+      if(s.mode!=='drag')return;
+      var a=s.hist[0],b=s.hist[s.hist.length-1],dtm=b[0]-a[0],v=dtm>0?(b[1]-a[1])/dtm*1000:0;
+      var projected=sp.x+(v/1000)*.998/(1-.998);                 // where the flick would coast to
+      var target=projected>sp.W/2?sp.W:0;
+      springTo(target,v,target?.38:.35,Math.abs(v)>300&&!target?.8:1); // hand the finger's velocity to the spring
+      var eat=function(c){c.stopPropagation();c.preventDefault()};   // a drag must not also count as a tap
+      addEventListener('click',eat,true);setTimeout(function(){removeEventListener('click',eat,true)},80);
+    }
+    dr.addEventListener('pointerup',release);dr.addEventListener('pointercancel',release);
+  }
   function renderCart(){
     var n=H.cartCount();
     $$('.cart-count').forEach(function(c){c.textContent=n;c.classList.toggle('on',n>0)});
@@ -91,10 +162,11 @@
       '<a class="btn block" href="checkout.html">Checkout</a><p class="fine demo">Demo store. No real payments are taken.</p>';
   }
 
+  function buzz(){try{navigator.vibrate&&!sp.reduce&&navigator.vibrate(8)}catch(e){}}
   /* ---------- add to cart (delegated) ---------- */
   d.addEventListener('click',function(e){
     var t=e.target.closest('[data-add]');if(!t)return;
-    if(H.addToCart(t.dataset.add,'',1)){renderCart();openCart()}
+    if(H.addToCart(t.dataset.add,'',1)){renderCart();openCart();buzz()}
   });
 
   /* ---------- product page ---------- */
@@ -127,7 +199,7 @@
     f&&f.addEventListener('submit',function(e){
       e.preventDefault();
       var o=$('#popt')?$('#popt').value:'',n=Math.max(1,Math.min(p.stock,+q.value||1));
-      if(H.addToCart(p.id,o,n)){renderCart();openCart()}
+      if(H.addToCart(p.id,o,n)){renderCart();openCart();buzz()}
       else{var m=$('.fine',f);m.textContent='You already have the most we have in stock in your cart.'}
     });
     // related
@@ -210,7 +282,7 @@
   }
 
   /* ---------- boot ---------- */
-  mountCart();renderGrids();renderProduct();renderCheckout();renderCart();
+  mountCart();initDrawer();renderGrids();renderProduct();renderCheckout();renderCart();
   ['cart','products','settings'].forEach(function(n){d.addEventListener('hg:'+n,renderCart)});
   addEventListener('storage',function(){renderCart();renderGrids()});
   if(location.hash==='#cart')openCart();

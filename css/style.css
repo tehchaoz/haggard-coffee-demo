@@ -19,14 +19,14 @@ body::after{content:"";position:fixed;inset:0;pointer-events:none;z-index:90;opa
   background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='180' height='180'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.85' numOctaves='2' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E")}
 .wrap{max-width:var(--max);margin:0 auto;padding:0 var(--gut)}
 h1,h2,h3{font-family:var(--display);font-weight:400;text-transform:uppercase;line-height:1.05;letter-spacing:.01em}
-h1{font-size:clamp(2.6rem,8vw,6rem)} h2{font-size:clamp(2rem,5vw,3.6rem)} h3{font-size:1.4rem}
+h1{font-size:clamp(2.6rem,8vw,6rem);letter-spacing:-.015em} h2{font-size:clamp(2rem,5vw,3.6rem);letter-spacing:-.008em} h3{font-size:1.4rem;letter-spacing:.012em}
 .eyebrow{font-family:var(--mono);font-size:.78rem;letter-spacing:.22em;text-transform:uppercase;color:var(--brass-hi)}
 .script{font-family:var(--script);color:var(--brass-hi);text-transform:none;letter-spacing:0}
 p+p{margin-top:1em}
 
 /* header */
 .site-header{position:fixed;inset:0 0 auto 0;z-index:50;transition:background .3s,backdrop-filter .3s,padding .3s;padding:18px 0}
-.site-header.solid{background:rgba(11,11,10,.88);backdrop-filter:blur(10px);padding:10px 0;border-bottom:1px solid var(--line)}
+.site-header.solid{background:rgba(11,11,10,.72);-webkit-backdrop-filter:blur(18px) saturate(180%);backdrop-filter:blur(18px) saturate(180%);padding:10px 0;box-shadow:0 1px 0 rgba(255,255,255,.07),0 14px 28px -16px rgba(0,0,0,.7)}
 .site-header .wrap{display:flex;align-items:center;justify-content:space-between;gap:20px}
 .brand img{height:42px;width:auto;transition:height .3s}
 .solid .brand img{height:34px}
@@ -272,3 +272,12 @@ select option{background:var(--coal)}
 .wolftxt{margin-top:30px}
 .wolftxt h2{margin-top:10px}
 @media (prefers-reduced-motion:reduce){.splash{display:none}}
+
+@media (prefers-reduced-transparency:reduce){
+  .site-header.solid{background:#0b0b0a;-webkit-backdrop-filter:none;backdrop-filter:none}
+  .open-badge{background:#0b0b0a;-webkit-backdrop-filter:none;backdrop-filter:none}
+}
+@media (prefers-contrast:more){
+  .site-header.solid{background:#0b0b0a;-webkit-backdrop-filter:none;backdrop-filter:none;border-bottom:2px solid var(--bone)}
+  :root{--mute:#c9c4b6;--line:rgba(236,230,214,.5)}
+}

@@ -38,10 +38,11 @@
   if(!reduce&&matchMedia('(hover:hover)').matches){
     d.querySelectorAll('.card').forEach(function(c){
       c.addEventListener('mousemove',function(e){
+        c.style.transition='transform 70ms linear,border-color .35s';
         var r=c.getBoundingClientRect(),x=(e.clientX-r.left)/r.width-.5,y=(e.clientY-r.top)/r.height-.5;
         c.style.transform='perspective(800px) rotateY('+x*6+'deg) rotateX('+(-y*6)+'deg) translateY(-4px)';
       });
-      c.addEventListener('mouseleave',function(){c.style.transform=''});
+      c.addEventListener('mouseleave',function(){c.style.transition='transform .7s cubic-bezier(.2,1.5,.4,1),border-color .35s';c.style.transform=''});
     });
   }
 
